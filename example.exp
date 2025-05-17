@@ -1,0 +1,7 @@
+#!/usr/bin/expect -f
+# example.exp
+
+spawn ./example.sh
+expect "enter something: "
+send "Example input.\r"
+expect eof

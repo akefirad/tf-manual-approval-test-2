@@ -13,14 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Expect
+        run: sudo apt-get update && sudo apt-get install -y expect
+
       - name: Setup Terafform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Initialize Terraform
-        run: terraform init
-
-      - name: Plan Terraform
-        run: terraform plan
-
-      - name: Apply Terraform
+      - name: Run auto_approve.sh
         run: ./auto_approve.sh

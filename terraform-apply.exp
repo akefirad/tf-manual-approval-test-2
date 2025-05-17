@@ -1,0 +1,37 @@
+#!/usr/bin/expect -f
+
+# Set timeout to 5 minutes
+set timeout 300
+
+# Start terraform apply
+spawn terraform apply
+
+# Handle the "Do you want to perform these actions?" prompt
+expect {
+    "Do you want to perform these actions?" {
+        exp_continue
+    }
+    "Enter a value:" {
+        set pipe [open "/tmp/terraform_pipe" r]
+        gets $pipe response
+        send "$response\r"
+        exp_continue
+    }
+    "Error:" {
+        puts "\nError occurred during terraform apply"
+        exit 1
+    }
+    timeout {
+        puts "\nTimeout occurred during terraform apply"
+        exit 1
+    }
+    "No changes. Your infrastructure matches the configuration." {
+        puts "\nTerraform apply completed"
+    }
+    eof {
+        puts "\nTerraform apply completed"
+    }
+}
+
+# Wait for the process to complete
+wait
