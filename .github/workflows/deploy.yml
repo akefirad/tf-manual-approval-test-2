@@ -21,3 +21,11 @@ jobs:
 
       - name: Plan Terraform
         run: terraform plan
+
+      - name: Apply Terraform
+        run: |
+          mkfifo /tmp/tf-approve
+          terraform apply < /tmp/tf-approve &
+          sleep 10
+          echo "no" > /tmp/tf-approve
+          rm /tmp/tf-approve
