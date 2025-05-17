@@ -1,0 +1,23 @@
+name: Deploy Terraform
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # concurrency: FIXME: setup concurrency!!!
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terafform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Plan Terraform
+        run: terraform plan
