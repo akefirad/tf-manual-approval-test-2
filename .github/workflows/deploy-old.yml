@@ -1,0 +1,23 @@
+name: Deploy Terraform
+
+on:
+  push:
+    branches:
+      - main-old
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # concurrency: FIXME: setup concurrency!!!
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Expect
+        run: sudo apt-get update && sudo apt-get install -y expect
+
+      - name: Setup Terafform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Run auto_approve.sh
+        run: ./auto_approve.sh
