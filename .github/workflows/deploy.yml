@@ -18,10 +18,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '20.x'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
     #   - name: Synthetize Terraform
     #     run: npm run cdktf plan
@@ -37,11 +37,11 @@ jobs:
         with:
           script: |
             const input = { 
-              //command: `script -c "docker run -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c 'terraform -chdir=/app init && terraform -chdir=/app apply'" /dev/null`,
-              command: "script",
-              args: ["-c", `"docker run -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c 'terraform -chdir=/app init && terraform -chdir=/app apply'"`],
+              //command: "script",
+              //args: ["-c", `"docker run -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c 'terraform -chdir=/app init && terraform -chdir=/app apply'"`],
               //command: "script",
               //args:["-c", '"terraform init && terraform apply"'],
+              command: 'terraform init && terraform apply'
             };
             const script = require('.github/scripts/remote-exec.cjs');
             script({ input });

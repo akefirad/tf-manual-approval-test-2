@@ -3,8 +3,10 @@ const { spawn } = require('child_process');
 const ngrok = require('ngrok');
 const bodyParser = require('body-parser');
 const AnsiToHtml = require('ansi-to-html');
+const pty = require('node-pty');
+const os = require('os');
+const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
 
-// Initialize ANSI to HTML converter
 const ansiConverter = new AnsiToHtml({
     newline: true,
     escapeXML: true,
@@ -15,6 +17,7 @@ const ansiConverter = new AnsiToHtml({
 class CommandInterface {
     constructor(app) {
         this.app = app;
+        this.term = null;
         this.commandOutput = '';
         this.commandProcess = null;
         this.isCommandRunning = false;
@@ -32,75 +35,89 @@ class CommandInterface {
                 res.redirect('/');
                 return;
             }
-            
+
             const input = req.body.input;
             console.log(`Received input: ${input}`);
-            
-            if (this.commandProcess?.stdin?.writable) {
-                try {
-                    this.commandProcess.stdin.write(input + '\n', (error) => {
-                        if (error) {
-                            console.error('Error writing to stdin:', error);
-                            this.commandOutput += `\nError writing to stdin: ${error.message}`;
-                        } else {
-                            console.log('Successfully wrote to stdin');
-                        }
-                        // this.commandProcess.stdin.end();
-                    });
-                } catch (error) {
-                    console.error('Exception while writing to stdin:', error);
-                    this.commandOutput += `\nException while writing to stdin: ${error.message}`;
-                }
-            } else {
-                console.log('Command process stdin is not writable');
-                this.commandOutput += '\nCommand process stdin is not writable';
-            }
+
+            // if (this.commandProcess?.stdin?.writable) {
+            //     try {
+            //         this.commandProcess.stdin.write(input + '\n', (error) => {
+            //             if (error) {
+            //                 console.error('Error writing to stdin:', error);
+            //                 this.commandOutput += `\nError writing to stdin: ${error.message}`;
+            //             } else {
+            //                 console.log('Successfully wrote to stdin');
+            //             }
+            //             // this.commandProcess.stdin.end();
+            //         });
+            //     } catch (error) {
+            //         console.error('Exception while writing to stdin:', error);
+            //         this.commandOutput += `\nException while writing to stdin: ${error.message}`;
+            //     }
+            // } else {
+            //     console.log('Command process stdin is not writable');
+            //     this.commandOutput += '\nCommand process stdin is not writable';
+            // }
+
+            this.term.write(input + '\n');
             res.redirect('/');
         });
     }
 
-    startCommand(command, args) {
-        // Configure spawn options for CI environment
-        const spawnOptions = {
-            // stdio: ['pipe', 'pipe', 'pipe'],
-            shell: true,  // Use shell to ensure proper stdin handling
+    startCommand(command) {
+        this.term = pty.spawn(shell, [], {
+            name: 'xterm-color',
+            // cols: 80,
+            // rows: 30,
+            cwd: process.cwd(),      // Current working directory
             env: {
                 ...process.env,
                 TF_LOG: 'trace'
-                // FORCE_COLOR: '1'  // Force color output
             }
-        };
-
-        this.commandProcess = spawn(command, args, spawnOptions);
-        this.isCommandRunning = true;
-
-        if (this.commandProcess.stdout) {
-            this.commandProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                console.log('Command output:', output);
-                this.commandOutput += output;
-            });
-        }
-
-        if (this.commandProcess.stderr) {
-            this.commandProcess.stderr.on('data', (data) => {
-                const error = data.toString();
-                console.error('Command error:', error);
-                this.commandOutput += error;
-            });
-        }
-
-        this.commandProcess.on('error', (error) => {
-            console.error('Failed to start command:', error);
-            this.commandOutput += `\nFailed to start command: ${error.message}`;
-            this.isCommandRunning = false;
         });
 
-        this.commandProcess.on('close', (code) => {
+        this.term.onData((data) => {
+            this.commandOutput += data
+            console.log(data);
+        });
+
+        this.term.onExit((code) => {
             console.log(`Command process exited with code ${code}`);
             this.commandOutput += `\nProcess exited with code ${code}`;
             this.isCommandRunning = false;
         });
+
+        this.term.write('terraform init && terraform apply\n');
+
+        this.isCommandRunning = true;
+
+        // if (this.commandProcess.stdout) {
+        //     this.commandProcess.stdout.on('data', (data) => {
+        //         const output = data.toString();
+        //         console.log('Command output:', output);
+        //         this.commandOutput += output;
+        //     });
+        // }
+
+        // if (this.commandProcess.stderr) {
+        //     this.commandProcess.stderr.on('data', (data) => {
+        //         const error = data.toString();
+        //         console.error('Command error:', error);
+        //         this.commandOutput += error;
+        //     });
+        // }
+
+        // this.commandProcess.on('error', (error) => {
+        //     console.error('Failed to start command:', error);
+        //     this.commandOutput += `\nFailed to start command: ${error.message}`;
+        //     this.isCommandRunning = false;
+        // });
+
+        // this.commandProcess.on('close', (code) => {
+        //     console.log(`Command process exited with code ${code}`);
+        //     this.commandOutput += `\nProcess exited with code ${code}`;
+        //     this.isCommandRunning = false;
+        // });
     }
 
     getHtmlTemplate(output) {
@@ -162,8 +179,8 @@ app.use(express.static('public'));
 // Create command interface instance
 const commandInterface = new CommandInterface(app);
 
-const startServer = async ({ command, args }) => {
-    console.log(`Starting server with command: ${command} and args: ${args}`);
+const startServer = async ({ command }) => {
+    console.log(`Starting server with command: ${command}`);
     try {
         // Start the web server
         app.listen(port, () => {
@@ -178,8 +195,8 @@ const startServer = async ({ command, args }) => {
         console.log(`Ngrok tunnel established at: ${url}`);
 
         // Start the command if provided
-        commandInterface.startCommand(command, args);
-        
+        commandInterface.startCommand(command);
+
         console.log('Application is ready!');
     } catch (error) {
         console.error('Error starting the application:', error);
