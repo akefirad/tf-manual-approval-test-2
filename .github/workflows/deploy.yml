@@ -37,8 +37,9 @@ jobs:
         with:
           script: |
             const input = { 
-              command: `script -c "docker run -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c 'terraform -chdir=/app init && terraform -chdir=/app apply'" /dev/null`,
-              args: [],
+              //command: `script -c "docker run -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c 'terraform -chdir=/app init && terraform -chdir=/app apply'" /dev/null`,
+              command: "script",
+              args: ["-c", `"docker run -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c 'terraform -chdir=/app init && terraform -chdir=/app apply'"`],
               //command: "script",
               //args:["-c", '"terraform init && terraform apply"'],
             };
