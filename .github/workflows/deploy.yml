@@ -16,12 +16,15 @@ jobs:
       - name: Setup Terafform
         uses: hashicorp/setup-terraform@v3
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
 
-      - name: Install dependencies
-        run: npm install
+      # - uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '20.x'
+
+      # - name: Install dependencies
+      #   run: npm install
 
     #   - name: Synthetize Terraform
     #     run: npm run cdktf plan
@@ -30,18 +33,22 @@ jobs:
     #     run: |
     #       script -c 'docker run -e TF_LOG=trace -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c "terraform -chdir=/app init && terraform -chdir=/app apply"' /dev/null
 
-      - name: Run deployment script
-        uses: actions/github-script@v7
-        env:
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-        with:
-          script: |
-            const input = { 
-              //command: "script",
-              //args: ["-c", `"docker run -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c 'terraform -chdir=/app init && terraform -chdir=/app apply'"`],
-              //command: "script",
-              //args:["-c", '"terraform init && terraform apply"'],
-              command: 'terraform init && terraform apply'
-            };
-            const script = require('.github/scripts/remote-exec.cjs');
-            script({ input });
+      # - name: Run deployment script
+      #   uses: actions/github-script@v7
+      #   env:
+      #     NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+      #   with:
+      #     script: |
+      #       const input = { 
+      #         //command: "script",
+      #         //args: ["-c", `"docker run -it -v $(pwd)/main.tf:/app/main.tf --entrypoint /bin/sh hashicorp/terraform -c 'terraform -chdir=/app init && terraform -chdir=/app apply'"`],
+      #         //command: "script",
+      #         //args:["-c", '"terraform init && terraform apply"'],
+      #         command: 'terraform init && terraform apply'
+      #       };
+      #       const script = require('.github/scripts/remote-exec.cjs');
+      #       script({ input });
+
+      - run: terraform init
+
+      - run: ./apply.py
