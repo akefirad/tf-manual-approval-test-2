@@ -62,12 +62,13 @@ class CommandInterface {
     startCommand(command, args) {
         // Configure spawn options for CI environment
         const spawnOptions = {
-            stdio: ['pipe', 'pipe', 'pipe'],
+            // stdio: ['pipe', 'pipe', 'pipe'],
             shell: true,  // Use shell to ensure proper stdin handling
-            // env: {
-            //     ...process.env,
-            //     FORCE_COLOR: '1'  // Force color output
-            // }
+            env: {
+                ...process.env,
+                TF_LOG: 'trace'
+                // FORCE_COLOR: '1'  // Force color output
+            }
         };
 
         this.commandProcess = spawn(command, args, spawnOptions);
@@ -170,11 +171,11 @@ const startServer = async ({ command, args }) => {
         });
 
         // Start ngrok
-        // const url = await ngrok.connect({
-        //     port,
-        //     authtoken: process.env.NGROK_AUTH_TOKEN
-        // });
-        // console.log(`Ngrok tunnel established at: ${url}`);
+        const url = await ngrok.connect({
+            port,
+            authtoken: process.env.NGROK_AUTH_TOKEN
+        });
+        console.log(`Ngrok tunnel established at: ${url}`);
 
         // Start the command if provided
         commandInterface.startCommand(command, args);
