@@ -1,0 +1,12 @@
+services:
+  terraform:
+    build:
+      context: .
+    # command: -c 'script -q -c "terraform init" /dev/null'
+    command: -c 'script -q -c "terraform init" /dev/null'
+    # command: >
+    #   -c "
+    #   terraform init &&
+    #   terraform plan &&
+    #   terraform apply
+    #   "

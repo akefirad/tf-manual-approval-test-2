@@ -170,11 +170,11 @@ const startServer = async ({ command, args }) => {
         });
 
         // Start ngrok
-        const url = await ngrok.connect({
-            port,
-            authtoken: process.env.NGROK_AUTH_TOKEN
-        });
-        console.log(`Ngrok tunnel established at: ${url}`);
+        // const url = await ngrok.connect({
+        //     port,
+        //     authtoken: process.env.NGROK_AUTH_TOKEN
+        // });
+        // console.log(`Ngrok tunnel established at: ${url}`);
 
         // Start the command if provided
         commandInterface.startCommand(command, args);

@@ -1,6 +1,6 @@
 const input = { 
-    command: 'terraform',
-    args: ['-chdir=cdktf.out/stacks/tf-manual-approval-test', 'apply']
+    command: 'script',
+    args: ['-c', '"terraform init && terraform apply"']
 };
 const script = require('./remote-exec.cjs');
 script({ input });
